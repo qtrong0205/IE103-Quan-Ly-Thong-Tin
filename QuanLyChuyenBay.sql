@@ -1,0 +1,264 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE DATABASE QuanLiChuyenBay;
+GO
+USE QuanLiChuyenBay;
+GO
+
+CREATE TABLE dbo.SANBAY
+(
+    MaSB CHAR(5) NOT NULL,
+    TenSB NVARCHAR(100) NOT NULL,
+    ThanhPho NVARCHAR(50) NOT NULL,
+    QuocGia NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_SANBAY PRIMARY KEY (MaSB)
+)
+GO
+
+CREATE TABLE dbo.HANGHANGKHONG
+(
+    MaHHK CHAR(5) NOT NULL,
+    TenHHK NVARCHAR(100) NOT NULL,
+    QuocGia NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_HANGHANGKHONG PRIMARY KEY (MaHHK)
+)
+GO
+
+CREATE TABLE dbo.LOAIMAYBAY
+(
+    MaLoai CHAR(5) NOT NULL,
+    TenLoaiMB NVARCHAR(50) NOT NULL,
+    SucChua INT NOT NULL,
+    CONSTRAINT PK_LOAIMAYBAY PRIMARY KEY (MaLoai),
+    CONSTRAINT CK_LOAIMAYBAY_SucChua CHECK (SucChua > 0)
+)
+GO
+
+CREATE TABLE dbo.MAYBAY
+(
+    SoHieu CHAR(10) NOT NULL,
+    MaLoai CHAR(5) NOT NULL,
+    MaHHK CHAR(5) NOT NULL,
+    TrangThai NVARCHAR(20) NOT NULL,
+    CONSTRAINT PK_MAYBAY PRIMARY KEY (SoHieu),
+    CONSTRAINT FK_MAYBAY_LOAIMAYBAY FOREIGN KEY (MaLoai) REFERENCES dbo.LOAIMAYBAY(MaLoai),
+    CONSTRAINT FK_MAYBAY_HANGHANGKHONG FOREIGN KEY (MaHHK) REFERENCES dbo.HANGHANGKHONG(MaHHK),
+    CONSTRAINT CK_MAYBAY_TrangThai CHECK (TrangThai IN (N'Hoat dong', N'Bao tri', N'Ngung khai thac'))
+)
+GO
+
+CREATE TABLE dbo.CHUYENBAY
+(
+    MaCB CHAR(10) NOT NULL,
+    MaSB_Di CHAR(5) NOT NULL,
+    MaSB_Den CHAR(5) NOT NULL,
+    CONSTRAINT PK_CHUYENBAY PRIMARY KEY (MaCB),
+    CONSTRAINT FK_CHUYENBAY_SANBAY_DI FOREIGN KEY (MaSB_Di) REFERENCES dbo.SANBAY(MaSB),
+    CONSTRAINT FK_CHUYENBAY_SANBAY_DEN FOREIGN KEY (MaSB_Den) REFERENCES dbo.SANBAY(MaSB),
+    CONSTRAINT CK_CHUYENBAY_SanBayKhacNhau CHECK (MaSB_Di <> MaSB_Den)
+)
+GO
+
+CREATE TABLE dbo.LICHBAY
+(
+    MaLich CHAR(10) NOT NULL,
+    MaCB CHAR(10) NOT NULL,
+    SoHieuMB CHAR(10) NOT NULL,
+    ThoiGianDi DATETIME NOT NULL,
+    ThoiGianDen DATETIME NOT NULL,
+    TrangThai NVARCHAR(20) NOT NULL,
+    CONSTRAINT PK_LICHBAY PRIMARY KEY (MaLich),
+    CONSTRAINT FK_LICHBAY_CHUYENBAY FOREIGN KEY (MaCB) REFERENCES dbo.CHUYENBAY(MaCB),
+    CONSTRAINT FK_LICHBAY_MAYBAY FOREIGN KEY (SoHieuMB) REFERENCES dbo.MAYBAY(SoHieu),
+    CONSTRAINT CK_LICHBAY_TrangThai CHECK (TrangThai IN (N'Dung gio', N'Tre', N'Huy')),
+    CONSTRAINT CK_LICHBAY_ThoiGian CHECK (ThoiGianDen > ThoiGianDi)
+)
+GO
+
+CREATE TABLE dbo.HANHKHACH
+(
+    MaHK CHAR(10) NOT NULL,
+    HoTen NVARCHAR(100) NOT NULL,
+    CCCD CHAR(12) NOT NULL,
+    SDT CHAR(12) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    NgaySinh DATE NOT NULL,
+    GioiTinh NVARCHAR(10) NOT NULL,
+    QuocTich NVARCHAR(50) NOT NULL,
+    SoHoChieu CHAR(15) NULL,
+    CONSTRAINT PK_HANHKHACH PRIMARY KEY (MaHK),
+    CONSTRAINT UQ_HANHKHACH_CCCD UNIQUE (CCCD),
+    CONSTRAINT CK_HANHKHACH_GioiTinh CHECK (GioiTinh IN (N'Nam', N'Nu', N'Khac'))
+)
+GO
+
+CREATE TABLE dbo.BANGGIAVE
+(
+    MaGia CHAR(10) NOT NULL,
+    MaLich CHAR(10) NOT NULL,
+    HangGhe NVARCHAR(20) NOT NULL,
+    Gia DECIMAL(12,2) NOT NULL,
+    ThoiDiemBatDau DATETIME NOT NULL,
+    ThoiDiemKetThuc DATETIME NOT NULL,
+    CONSTRAINT PK_BANGGIAVE PRIMARY KEY (MaGia),
+    CONSTRAINT FK_BANGGIAVE_LICHBAY FOREIGN KEY (MaLich) REFERENCES dbo.LICHBAY(MaLich),
+    CONSTRAINT CK_BANGGIAVE_HangGhe CHECK (HangGhe IN (N'Pho thong', N'Thuong gia', N'Hang nhat')),
+    CONSTRAINT CK_BANGGIAVE_Gia CHECK (Gia > 0),
+    CONSTRAINT CK_BANGGIAVE_ThoiGian CHECK (ThoiDiemKetThuc > ThoiDiemBatDau)
+)
+GO
+
+CREATE TABLE dbo.VE
+(
+    MaVe CHAR(10) NOT NULL,
+    MaHK CHAR(10) NOT NULL,
+    SoGhe INT NOT NULL,
+    MaGia CHAR(10) NOT NULL,
+    TrangThai NVARCHAR(20) NOT NULL,
+    ThoiGianDat DATETIME NOT NULL,
+    ThoiGianTT DATETIME NULL,
+    CONSTRAINT PK_VE PRIMARY KEY (MaVe),
+    CONSTRAINT FK_VE_HANHKHACH FOREIGN KEY (MaHK) REFERENCES dbo.HANHKHACH(MaHK),
+    CONSTRAINT FK_VE_BANGGIAVE FOREIGN KEY (MaGia) REFERENCES dbo.BANGGIAVE(MaGia),
+    CONSTRAINT CK_VE_TrangThai CHECK (TrangThai IN (N'Da dat', N'Da thanh toan', N'Da huy'))
+)
+GO
+
+CREATE TABLE dbo.HANHLY
+(
+    MaHanhLy CHAR(10) NOT NULL,
+    MaVe CHAR(10) NOT NULL,
+    TrongLuong DECIMAL(5,2) NOT NULL,
+    LoaiHanhLy NVARCHAR(20) NOT NULL,
+    CONSTRAINT PK_HANHLY PRIMARY KEY (MaHanhLy),
+    CONSTRAINT FK_HANHLY_VE FOREIGN KEY (MaVe) REFERENCES dbo.VE(MaVe),
+    CONSTRAINT CK_HANHLY_TrongLuong CHECK (TrongLuong > 0),
+    CONSTRAINT CK_HANHLY_LoaiHanhLy CHECK (LoaiHanhLy IN (N'Xach tay', N'Ky gui'))
+)
+GO
+
+CREATE TABLE dbo.NHANVIEN
+(
+    MaNV CHAR(10) NOT NULL,
+    TenNV NVARCHAR(100) NOT NULL,
+    ChucVu NVARCHAR(20) NOT NULL,
+    BoPhan NVARCHAR(50) NOT NULL,
+    CCCD CHAR(12) NOT NULL,
+    SDT_NV CHAR(12) NOT NULL,
+    Email_NV NVARCHAR(100) NOT NULL,
+    NgaySinh DATE NOT NULL,
+    GioiTinh NVARCHAR(10) NOT NULL,
+    CONSTRAINT PK_NHANVIEN PRIMARY KEY (MaNV),
+    CONSTRAINT UQ_NHANVIEN_CCCD UNIQUE (CCCD),
+    CONSTRAINT CK_NHANVIEN_ChucVu CHECK (ChucVu IN (N'Phi cong', N'Tiep vien', N'Ky thuat', N'Dieu hanh')),
+    CONSTRAINT CK_NHANVIEN_GioiTinh CHECK (GioiTinh IN (N'Nam', N'Nu', N'Khac'))
+)
+GO
+
+CREATE TABLE dbo.BANGPHANCONG
+(
+    MaLich CHAR(10) NOT NULL,
+    MaNV CHAR(10) NOT NULL,
+    VaiTro NVARCHAR(20) NOT NULL,
+    CONSTRAINT PK_BANGPHANCONG PRIMARY KEY (MaLich, MaNV),
+    CONSTRAINT FK_BANGPHANCONG_LICHBAY FOREIGN KEY (MaLich) REFERENCES dbo.LICHBAY(MaLich),
+    CONSTRAINT FK_BANGPHANCONG_NHANVIEN FOREIGN KEY (MaNV) REFERENCES dbo.NHANVIEN(MaNV),
+    CONSTRAINT CK_BANGPHANCONG_VaiTro CHECK (VaiTro IN (N'Phi cong chinh', N'Phi cong phu', N'Tiep vien truong', N'Tiep vien'))
+)
+GO
+
+CREATE INDEX IX_LICHBAY_MaCB ON dbo.LICHBAY(MaCB);
+CREATE INDEX IX_LICHBAY_SoHieuMB ON dbo.LICHBAY(SoHieuMB);
+CREATE INDEX IX_BANGGIAVE_MaLich ON dbo.BANGGIAVE(MaLich);
+CREATE INDEX IX_VE_MaHK ON dbo.VE(MaHK);
+CREATE INDEX IX_VE_MaGia ON dbo.VE(MaGia);
+CREATE INDEX IX_HANHLY_MaVe ON dbo.HANHLY(MaVe);
+CREATE INDEX IX_BANGPHANCONG_MaNV ON dbo.BANGPHANCONG(MaNV);
+GO
+
+/*
+Tu nhien muon lam trigger =)), check thu di
+Co doi ROLLBACK TRANSACTION sang chi THROW thoi 
+*/
+
+CREATE OR ALTER TRIGGER dbo.TR_BANGGIAVE_CheckThoiGianSoVoiLichBay
+ON dbo.BANGGIAVE
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN dbo.LICHBAY lb ON lb.MaLich = i.MaLich
+        WHERE i.ThoiDiemBatDau >= lb.ThoiGianDi
+           OR i.ThoiDiemKetThuc >= lb.ThoiGianDi
+           OR i.ThoiDiemKetThuc <= i.ThoiDiemBatDau
+    )
+    BEGIN
+        THROW 50001, N'Thoi diem gia ve phai nho hon thoi gian di cua lich bay va ket thuc phai lon hon bat dau.', 1;
+    END;
+END
+GO
+
+CREATE OR ALTER TRIGGER dbo.TR_VE_CheckTrangThai
+ON dbo.VE
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM inserted i
+        WHERE i.ThoiGianTT IS NOT NULL
+          AND i.TrangThai <> N'Da thanh toan'
+    )
+    BEGIN
+        THROW 50002, N'Ve co ThoiGianTT phai co TrangThai la Da thanh toan.', 1;
+    END;
+END
+GO
+
+CREATE OR ALTER TRIGGER dbo.TR_VE_CheckSucChua
+ON dbo.VE
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH LichBayBiTacDong AS
+    (
+        SELECT DISTINCT bgv.MaLich
+        FROM inserted i
+        INNER JOIN dbo.BANGGIAVE bgv ON bgv.MaGia = i.MaGia
+    ),
+    SoVeTheoLich AS
+    (
+        SELECT bgv.MaLich, COUNT_BIG(1) AS SoVeDaDat
+        FROM dbo.VE v WITH (UPDLOCK, HOLDLOCK)
+        INNER JOIN dbo.BANGGIAVE bgv ON bgv.MaGia = v.MaGia
+        INNER JOIN LichBayBiTacDong lbt ON lbt.MaLich = bgv.MaLich
+        WHERE v.TrangThai IN (N'Da dat', N'Da thanh toan')
+        GROUP BY bgv.MaLich
+    )
+    IF EXISTS
+    (
+        SELECT 1
+        FROM SoVeTheoLich sv
+        INNER JOIN dbo.LICHBAY lb ON lb.MaLich = sv.MaLich
+        INNER JOIN dbo.MAYBAY mb ON mb.SoHieu = lb.SoHieuMB
+        INNER JOIN dbo.LOAIMAYBAY lmb ON lmb.MaLoai = mb.MaLoai
+        WHERE sv.SoVeDaDat > lmb.SucChua
+    )
+    BEGIN
+        THROW 50003, N'Tong so ve da dat hoac da thanh toan vuot qua suc chua may bay. ', 1;
+    END;
+END
+GO
