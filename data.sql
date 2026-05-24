@@ -4,24 +4,6 @@ GO
 SET DATEFORMAT ymd;
 GO
 
--- =========================================================================
--- BƯỚC 1: XÓA SẠCH DỮ LIỆU CŨ THEO ĐÚNG THỨ TỰ TRÁNH KẸT KHÓA NGOẠI
--- =========================================================================
-DELETE FROM dbo.BANGPHANCONG;
-DELETE FROM dbo.HANHLY;
-DELETE FROM dbo.VE;
-DELETE FROM dbo.BANGGIAVE;
-DELETE FROM dbo.LICHBAY;
-DELETE FROM dbo.CHUYENBAY;
-DELETE FROM dbo.MAYBAY;
-DELETE FROM dbo.HANGHANGKHONG;
-DELETE FROM dbo.LOAIMAYBAY;
-DELETE FROM dbo.SANBAY;
-DELETE FROM dbo.NHANVIEN;
-DELETE FROM dbo.HANHKHACH;
-GO
-
-
 -- 1. CHÈN SÂN BAY (SANBAY)
 
 INSERT INTO dbo.SANBAY (MaSB, TenSB, ThanhPho, QuocGia) VALUES
@@ -31,7 +13,6 @@ INSERT INTO dbo.SANBAY (MaSB, TenSB, ThanhPho, QuocGia) VALUES
 ('CXR', N'Sân bay Quốc tế Cam Ranh', N'Nha Trang', N'Việt Nam'),
 ('PQC', N'Sân bay Quốc tế Phú Quốc', N'Phú Quốc', N'Việt Nam');
 GO
-
 
 -- 2. CHÈN HÃNG HÀNG KHÔNG (HANGHANGKHONG)
 INSERT INTO dbo.HANGHANGKHONG (MaHHK, TenHHK, QuocGia) VALUES
